@@ -31,8 +31,8 @@ function App() {
   });
 
   const movePaddle = (e: { clientX: number }) => {
-    if (e.clientX >= 100 && e.clientX <= 900) {
-      setPaddle({ x: e.clientX - 100 });
+    if (e.clientX >= 270 && e.clientX <= 985) {
+      setPaddle({ x: e.clientX - 240 });
     }
 
     if (!game.active) {
@@ -59,14 +59,14 @@ function App() {
 
   return (
     <>
-      <div className="game-board">
-        <div>
-          <div className="lives"></div>
+      <div className="game-board" onMouseMove={(e) => movePaddle(e)}>
+        <div className="navbar">
           <div className="">level</div>
+          <div className="lives"></div>
           <div className="">score</div>
         </div>
         <div className="bricks"></div>
-        <div className="paddle"></div>
+        <div className="paddle" style={{ left: `${paddle.x}px` }}></div>
       </div>
     </>
   );
