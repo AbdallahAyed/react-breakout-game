@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getBricks } from "./utils";
 
 type GameProps = {
   level: number;
@@ -57,6 +58,12 @@ function App() {
     );
   };
 
+  const bounceAngle = (a: number, b: number, c: number) => {
+    const l = b - a + 1;
+    const p = (c * 100) / l;
+    return p <= 20 ? -3 : p <= 40 ? -2 : p <= 60 ? 1 : p <= 80 ? 2 : 3;
+  };
+
   return (
     <>
       <div className="game-board" onMouseMove={(e) => movePaddle(e)}>
@@ -65,7 +72,15 @@ function App() {
           <div className="lives"></div>
           <div className="">score</div>
         </div>
-        <div className="bricks"></div>
+        <div className="bricks">
+          {getBricks(4, 6).map((row) => (
+            <div>
+              {row.map(() => (
+                <div className="brick"></div>
+              ))}
+            </div>
+          ))}
+        </div>
         <div className="paddle" style={{ left: `${paddle.x}px` }}></div>
       </div>
     </>
