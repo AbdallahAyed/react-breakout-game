@@ -40,6 +40,11 @@ function App() {
     }
   };
 
+  const reset = () => {
+    setGame({ ...game, active: !game.active });
+    setBall({ ...ball, x: paddle.x + 90, y: 32 });
+  };
+
   return (
     <>
       <div className="game-board">
