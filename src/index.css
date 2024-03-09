@@ -7,6 +7,15 @@
   outline: 0;
 }
 
-body {
+#root {
+  background-color: #0a0908;
+  color: #f8f9fa;
   height: 100vh;
+}
+
+.paddle {
+  width: 250px;
+  height: 18px;
+  border-radius: 8px;
+  background-color: #f8f9fa;
 }
