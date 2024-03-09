@@ -30,6 +30,16 @@ function App() {
     x: 400,
   });
 
+  const movePaddle = (e: { clientX: number }) => {
+    if (e.clientX >= 100 && e.clientX <= 900) {
+      setPaddle({ x: e.clientX - 100 });
+    }
+
+    if (!game.active) {
+      setBall({ ...ball, x: paddle.x + 90 });
+    }
+  };
+
   return (
     <>
       <div className="game-board">
