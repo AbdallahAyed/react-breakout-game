@@ -45,6 +45,18 @@ function App() {
     setBall({ ...ball, x: paddle.x + 90, y: 32 });
   };
 
+  const isCollide = (
+    a: { y: number; height: number; x: number; width: number },
+    b: { y: number; height: number; x: number; width: number }
+  ) => {
+    return !(
+      a.y + a.height < b.y ||
+      a.y > b.y + b.height ||
+      a.x + a.width < b.x ||
+      a.x > b.x + b.width
+    );
+  };
+
   return (
     <>
       <div className="game-board">
