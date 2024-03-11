@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getBricks } from "./utils";
 
 type GameProps = {
@@ -36,10 +36,10 @@ function App() {
   });
 
   const [ball, setBall] = useState<BallProps>({
-    x: 490,
-    y: 32,
-    width: 20,
-    height: 20,
+    x: 505,
+    y: 75,
+    width: 30,
+    height: 30,
   });
 
   const [paddle, setPaddle] = useState({
@@ -48,32 +48,97 @@ function App() {
 
   const [bricks, setBricks] = useState<BricksProps>();
 
-  const movePaddle = (e: { clientX: number }) => {
+  useEffect(() => {
+    let all = document.getElementsByClassName("brick");
+    let updatedBricksArray = [];
+    for (let index = 0; index < all.length; index++) {
+      const el: any = all[index];
+
+      el.style.backgroundColor = "rgb(60, 238, 43)";
+
+      updatedBricksArray.push({
+        x: el.offsetLeft,
+        y: 690 - el.offsetTop,
+        height: el.clientHeight,
+        width: el.clientWidth,
+        destroyed: false,
+      });
+    }
+    setBricks(updatedBricksArray);
+  }, []);
+
+  // Effect to handle game initialization
+  useEffect(() => {
+    if (game.active) {
+      const init = setInterval(() => {
+        let up = 8;
+        let right = 1;
+
+        let leftBricks = 0;
+
+        bricks?.forEach((el, index) => {
+          if (isCollide(ball, el) && !el.destroyed) {
+            const all = document.getElementsByClassName(
+              "brick"
+            ) as HTMLCollectionOf<HTMLElement>;
+            all[index].style.backgroundColor = "transparent";
+            el.destroyed = true;
+            setGame({ ...game, score: game.score + 1 });
+            up = -up;
+          }
+          if (!el.destroyed) {
+            leftBricks++;
+          }
+          if (leftBricks === 0 && index + 1 === bricks?.length) {
+            console.log("Boahh");
+
+            if (game.speed) {
+              setGame({ ...game, speed: game.speed - 1 });
+            }
+            setTimeout(() => {
+              clearInterval(init);
+              reset();
+              nextLevel();
+            }, 0);
+          }
+        });
+      }, game.speed);
+
+      return () => clearInterval(init); // Cleanup on unmount or game reset
+    }
+  }, [game.active, ball, bricks]);
+
+  const movePaddle = (e: { clientX: number; clientY: number }) => {
     if (e.clientX >= 270 && e.clientX <= 985) {
       setPaddle({ x: e.clientX - 240 });
+      setBall({ ...ball, x: e.clientX - 130, y: e.clientY });
     }
 
     if (!game.active) {
-      setBall({ ...ball, x: paddle.x + 90 });
+      setBall({ ...ball, x: paddle.x + 110 });
     }
   };
 
   const reset = () => {
     setGame({ ...game, active: !game.active });
-    setBall({ ...ball, x: paddle.x + 90, y: 32 });
+    setBall({ ...ball, x: paddle.x + 110 });
   };
 
-  const isCollide = (
-    a: { y: number; height: number; x: number; width: number },
-    b: { y: number; height: number; x: number; width: number }
-  ) => {
-    return !(
-      a.y + a.height < b.y ||
-      a.y > b.y + b.height ||
-      a.x + a.width < b.x ||
-      a.x > b.x + b.width
-    );
-  };
+  // Function to check collision between two objects
+  function isCollide(a: any, b: any) {
+    // Check if any of the sides from rect1 are outside of rect2
+    if (
+      a.x + a.width > b.x &&
+      a.x < b.x + b.width &&
+      a.y + a.height > b.y &&
+      a.y < b.y + b.height
+    ) {
+      // Collision detected
+      return true;
+    }
+    // No collision
+    return false;
+  }
 
   const bounceAngle = (a: number, b: number, c: number) => {
     const l = b - a + 1;
@@ -85,8 +150,10 @@ function App() {
     let all = document.getElementsByClassName(
       "brick"
     ) as HTMLCollectionOf<HTMLElement>;
+
     for (let index = 0; index < bricks!.length; index++) {
       const el = bricks![index];
+
       if (!el.destroyed) {
         let times = 0;
         all[index].style.backgroundColor = "tomato";
@@ -144,81 +211,27 @@ function App() {
         });
       }
       setBricks(updatedBricksArray);
+      setGame({ ...game, level: game.level + 1 });
+    }, 0);
+  };
+
+  const playAgain = () => {
+    setGame({
+      level: 1,
+      lives: 3,
+      score: 0,
+      speed: 20,
+      active: false,
+      gameOver: false,
+    });
+    setTimeout(() => {
+      reset();
+      nextLevel();
     }, 0);
   };
 
   const initGame = () => {
-    setGame({ ...game, active: !game.active });
-
-    if (game.active) {
-      let up = 8;
-      let right = 1;
-
-      const init = setInterval(() => {
-        let leftBricks = 0;
-        bricks?.forEach((el, index) => {
-          if (isCollide(ball, el) && !el.destroyed) {
-            const all = document.getElementsByClassName(
-              "brick"
-            ) as HTMLCollectionOf<HTMLElement>;
-            all[index].style.backgroundColor = "transparent";
-            el.destroyed = true;
-            setGame({ ...game, score: game.score + 1 });
-            up = -up;
-          }
-
-          if (!el.destroyed) {
-            leftBricks++;
-          }
-
-          if (leftBricks === 0 && index + 1 === bricks.length) {
-            setGame({ ...game, level: game.level + 1 });
-            if (game.speed) {
-              setGame({ ...game, speed: game.speed - 1 });
-            }
-            setTimeout(() => {
-              clearInterval(init);
-              reset();
-              nextLevel();
-            }, 0);
-          }
-
-          // bounce against the ceilings and floor
-          if (ball.y > 530 || ball.y < -50) {
-            up = -up;
-          }
-
-          // bounce against paddle
-          if (
-            ball.y < 30 &&
-            ball.x + 20 > paddle.x &&
-            ball.x < paddle.x + 200
-          ) {
-            let res = bounceAngle(
-              paddle.x,
-              paddle.x + 200,
-              ball.x + 10 - paddle.x
-            );
-            if (res === 1) {
-              up = -up;
-              right = right / Math.abs(right);
-            } else {
-              up = -up;
-              right = 1 * res;
-            }
-          }
-
-          // bounce against side walls
-          if (ball.x > 980 || ball.x < 0) {
-            right = -right;
-          }
-
-          setBall({ ...ball, y: ball.y + up, x: ball.x + right });
-
-          gameOver(ball.x, ball.y, paddle.x, init);
-        }, game.speed);
-      });
-    }
+    reset();
   };
 
   return (
@@ -226,12 +239,12 @@ function App() {
       <div
         className="game-board"
         onMouseMove={(e) => movePaddle(e)}
-        onClick={() => initGame()}
+        onClick={initGame}
       >
-        <div className="navbar">
-          <div className="">level</div>
-          <div className="lives"></div>
-          <div className="">score</div>
+        <div className="info-panel">
+          <p>Level: {game.level}</p>
+          <p>Lives: {game.lives}</p>
+          <p>Score: {game.score}</p>
         </div>
         <div className="bricks">
           {getBricks(4, 6).map((row) => (
