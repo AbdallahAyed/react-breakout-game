@@ -15,6 +15,8 @@ type BallProps = {
   y: number;
   width: number;
   height: number;
+  yVelocity: number;
+  xVelocity: number;
 };
 
 type BricksProps = {
@@ -40,6 +42,8 @@ function App() {
     y: 75,
     width: 30,
     height: 30,
+    yVelocity: 8,
+    xVelocity: 1,
   });
 
   const [paddle, setPaddle] = useState({
@@ -70,10 +74,9 @@ function App() {
   // Effect to handle game initialization
   useEffect(() => {
     if (game.active) {
+      // let up = 80;
+      // let right = 1;
       const init = setInterval(() => {
-        let up = 8;
-        let right = 1;
-
         let leftBricks = 0;
 
         bricks?.forEach((el, index) => {
@@ -84,7 +87,10 @@ function App() {
             all[index].style.backgroundColor = "transparent";
             el.destroyed = true;
             setGame({ ...game, score: game.score + 1 });
-            up = -up;
+            setBall((prevBall) => ({
+              ...prevBall,
+              yVelocity: -prevBall.yVelocity,
+            }));
           }
           if (!el.destroyed) {
             leftBricks++;
@@ -102,6 +108,48 @@ function App() {
             }, 0);
           }
         });
+
+        // Bounce against paddle
+        if (ball.y < 68 && ball.x + 24 > paddle.x && ball.x < paddle.x + 250) {
+          let res = bounceAngle(ball.x, paddle.x);
+          if (res === 1) {
+            setBall((prevBall) => ({
+              ...prevBall,
+              yVelocity: -prevBall.yVelocity,
+              xVelocity: prevBall.xVelocity / Math.abs(prevBall.xVelocity),
+            }));
+          } else {
+            setBall((prevBall) => ({
+              ...prevBall,
+              yVelocity: -prevBall.yVelocity,
+              xVelocity: 1 * res,
+            }));
+          }
+        }
+
+        // Check for collisions with walls
+        if (ball.y > 680 || ball.y < 15) {
+          setBall((prevBall) => ({
+            ...prevBall,
+            yVelocity: -prevBall.yVelocity,
+          }));
+        }
+
+        // Check for collisions with sides
+        if (ball.x > 990 || ball.x < 0) {
+          setBall((prevBall) => ({
+            ...prevBall,
+            xVelocity: -prevBall.xVelocity,
+          }));
+        }
+
+        setBall((prevBall) => ({
+          ...prevBall,
+          y: prevBall.y + prevBall.yVelocity,
+          x: prevBall.x + prevBall.xVelocity,
+        }));
+
+        gameOver(ball.x, ball.y, paddle.x, init);
       }, game.speed);
 
       return () => clearInterval(init); // Cleanup on unmount or game reset
@@ -111,7 +159,6 @@ function App() {
   const movePaddle = (e: { clientX: number; clientY: number }) => {
     if (e.clientX >= 270 && e.clientX <= 985) {
       setPaddle({ x: e.clientX - 240 });
-      setBall({ ...ball, x: e.clientX - 130, y: e.clientY });
     }
 
     if (!game.active) {
@@ -121,7 +168,7 @@ function App() {
 
   const reset = () => {
     setGame({ ...game, active: !game.active });
-    setBall({ ...ball, x: paddle.x + 110 });
+    setBall({ ...ball, x: paddle.x + 110, y: 75 });
   };
 
   // Function to check collision between two objects
@@ -140,16 +187,29 @@ function App() {
     return false;
   }
 
-  const bounceAngle = (a: number, b: number, c: number) => {
-    const l = b - a + 1;
-    const p = (c * 100) / l;
-    return p <= 20 ? -3 : p <= 40 ? -2 : p <= 60 ? 1 : p <= 80 ? 2 : 3;
+  const bounceAngle = (ballX: number, paddleX: number) => {
+    // Calculate the relative position of the collision point on the paddle
+    const relativePosition = (ballX - paddleX) / 250;
+
+    // Determine the bounce angle based on the relative position
+    if (relativePosition < 0.2) {
+      return -3; // Strong left bounce
+    } else if (relativePosition < 0.4) {
+      return -2; // Moderate left bounce
+    } else if (relativePosition < 0.6) {
+      return 1; // Straight bounce
+    } else if (relativePosition < 0.8) {
+      return 2; // Moderate right bounce
+    } else {
+      return 3; // Strong right bounce
+    }
   };
 
   const flashBricks = () => {
     let all = document.getElementsByClassName(
       "brick"
     ) as HTMLCollectionOf<HTMLElement>;
+    setGame((prevGame) => ({ ...prevGame, lives: prevGame.lives - 1 }));
 
     for (let index = 0; index < bricks!.length; index++) {
       const el = bricks![index];
@@ -172,23 +232,21 @@ function App() {
     }
   };
 
-  const gameOver = (
-    bX: number,
-    bY: number,
-    pX: number,
-    interval: number | undefined
-  ) => {
-    if (bY < -20 && (bX < pX || bX > pX + 200)) {
+  const gameOver = (ballX, ballY, paddleX, interval) => {
+    // Check if the ball goes beyond the top boundary and misses the paddle
+    if (ballY < 68 && (ballX < paddleX || ballX > paddleX + 250)) {
       if (game.lives > 0) {
-        setGame({ ...game, lives: game.lives - 1 });
+        // Decrease remaining lives
+        setGame((prevGame) => ({ ...prevGame, lives: prevGame.lives - 1 }));
         clearInterval(interval);
         setTimeout(() => {
           flashBricks();
           reset();
         }, 0);
       } else {
+        // Game over if no lives left
         clearInterval(interval);
-        setGame({ ...game, gameOver: true });
+        setGame((prevGame) => ({ ...prevGame, gameOver: true }));
       }
     }
   };
