@@ -148,9 +148,9 @@ function App() {
           y: prevBall.y + prevBall.yVelocity,
           x: prevBall.x + prevBall.xVelocity,
         }));
-
-        gameOver(ball.x, ball.y, paddle.x, init);
       }, game.speed);
+
+      gameOver(ball.x, ball.y, paddle.x, init);
 
       return () => clearInterval(init); // Cleanup on unmount or game reset
     }
@@ -167,7 +167,7 @@ function App() {
   };
 
   const reset = () => {
-    setGame({ ...game, active: !game.active });
+    setGame((prevGame) => ({ ...prevGame, active: !game.active }));
     setBall({ ...ball, x: paddle.x + 110, y: 75 });
   };
 
@@ -238,13 +238,12 @@ function App() {
     interval: number | undefined
   ) => {
     if (ballY < 68 && (ballX < paddleX || ballX > paddleX + 250)) {
-      if (game.lives > ) {
+      if (game.lives > 0) {
         setGame((prevGame) => ({ ...prevGame, lives: prevGame.lives - 1 }));
         clearInterval(interval);
         setTimeout(() => {
           flashBricks();
           reset();
-          console.log(game.lives);
         }, 0);
       } else {
         clearInterval(interval);
