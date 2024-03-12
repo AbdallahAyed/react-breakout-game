@@ -19,7 +19,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  background-color: aqua;
+  background-color: transparent;
   width: 80vw;
   height: 80dvh;
   border-radius: 12px;
