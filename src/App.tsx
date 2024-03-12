@@ -209,7 +209,6 @@ function App() {
     let all = document.getElementsByClassName(
       "brick"
     ) as HTMLCollectionOf<HTMLElement>;
-    setGame((prevGame) => ({ ...prevGame, lives: prevGame.lives - 1 }));
 
     for (let index = 0; index < bricks!.length; index++) {
       const el = bricks![index];
@@ -232,21 +231,24 @@ function App() {
     }
   };
 
-  const gameOver = (ballX, ballY, paddleX, interval) => {
-    // Check if the ball goes beyond the top boundary and misses the paddle
+  const gameOver = (
+    ballX: number,
+    ballY: number,
+    paddleX: number,
+    interval: number | undefined
+  ) => {
     if (ballY < 68 && (ballX < paddleX || ballX > paddleX + 250)) {
-      if (game.lives > 0) {
-        // Decrease remaining lives
+      if (game.lives > ) {
         setGame((prevGame) => ({ ...prevGame, lives: prevGame.lives - 1 }));
         clearInterval(interval);
         setTimeout(() => {
           flashBricks();
           reset();
+          console.log(game.lives);
         }, 0);
       } else {
-        // Game over if no lives left
         clearInterval(interval);
-        setGame((prevGame) => ({ ...prevGame, gameOver: true }));
+        setGame({ ...game, gameOver: true });
       }
     }
   };
