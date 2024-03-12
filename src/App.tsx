@@ -238,7 +238,7 @@ function App() {
     interval: number | undefined
   ) => {
     if (ballY < 68 && (ballX < paddleX || ballX > paddleX + 250)) {
-      if (game.lives > 0) {
+      if (game.lives > 1) {
         setGame((prevGame) => ({ ...prevGame, lives: prevGame.lives - 1 }));
         clearInterval(interval);
         setTimeout(() => {
@@ -275,18 +275,7 @@ function App() {
   };
 
   const playAgain = () => {
-    setGame({
-      level: 1,
-      lives: 3,
-      score: 0,
-      speed: 20,
-      active: false,
-      gameOver: false,
-    });
-    setTimeout(() => {
-      reset();
-      nextLevel();
-    }, 0);
+    location.reload();
   };
 
   const initGame = () => {
@@ -295,31 +284,38 @@ function App() {
 
   return (
     <>
-      <div
-        className="game-board"
-        onMouseMove={(e) => movePaddle(e)}
-        onClick={initGame}
-      >
-        <div className="info-panel">
-          <p>Level: {game.level}</p>
-          <p>Lives: {game.lives}</p>
-          <p>Score: {game.score}</p>
-        </div>
-        <div className="bricks">
-          {getBricks(4, 6).map((row) => (
-            <div>
-              {row.map(() => (
-                <div className="brick"></div>
-              ))}
-            </div>
-          ))}
-        </div>
+      {!game.gameOver ? (
         <div
-          className="ball"
-          style={{ left: `${ball.x}px`, bottom: `${ball.y}px` }}
-        ></div>
-        <div className="paddle" style={{ left: `${paddle.x}px` }}></div>
-      </div>
+          className="game-board"
+          onMouseMove={(e) => movePaddle(e)}
+          onClick={initGame}
+        >
+          <div className="info-panel">
+            <p>Level: {game.level}</p>
+            <p>Lives: {game.lives}</p>
+            <p>Score: {game.score}</p>
+          </div>
+          <div className="bricks">
+            {getBricks(4, 6).map((row) => (
+              <div>
+                {row.map(() => (
+                  <div className="brick"></div>
+                ))}
+              </div>
+            ))}
+          </div>
+          <div
+            className="ball"
+            style={{ left: `${ball.x}px`, bottom: `${ball.y}px` }}
+          ></div>
+          <div className="paddle" style={{ left: `${paddle.x}px` }}></div>
+        </div>
+      ) : (
+        <div className="game-over">
+          <h1>Game Over</h1>
+          <button onClick={playAgain}>Play Again</button>
+        </div>
+      )}
     </>
   );
 }
